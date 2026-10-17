@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Something Special For You ❤️</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        romantic: ['"Dancing Script"', 'cursive'],
+                        sans: ['"Poppins"', 'sans-serif'],
+                    },
+                    colors: {
+                        rose: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Animations & Glassmorphism */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 20px 50px rgba(225, 29, 72, 0.15), 0 4px 15px rgba(225, 29, 72, 0.08);
+        }
+
+        /* Floating Hearts Background Particle Effect */
+        .heart-particle {
+            position: fixed;
+            bottom: -50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatUp linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.8);
+                opacity: 0;
+            }
+            15% {
+                opacity: 0.65;
+            }
+            85% {
+                opacity: 0.65;
+            }
+            100% {
+                transform: translateY(-115vh) rotate(360deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* Heartbeat Animation */
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.18); }
+            30% { transform: scale(0.95); }
+            45% { transform: scale(1.12); }
+            60% { transform: scale(1); }
+        }
+
+        .animate-heartbeat {
+            animation: heartbeat 2s infinite ease-in-out;
+        }
+
+        /* Gentle Floating Animation for Illustrations */
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-float {
+            animation: gentleFloat 3.5s ease-in-out infinite;
+        }
+
+        /* Glowing Button Effect */
+        .glow-btn {
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.55);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .glow-btn:hover {
+            box-shadow: 0 0 35px rgba(244, 63, 94, 0.85);
+            transform: translateY(-2px) scale(1.03);
+        }
+
+        .glow-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        /* Screen Fade Transitions */
+        .screen-transition {
+            transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .screen-hidden {
+            opacity: 0;
+            transform: scale(0.92) translateY(15px);
+            pointer-events: none;
+            position: absolute;
+            visibility: hidden;
+        }
+
+        .screen-visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+            position: relative;
+            visibility: visible;
+        }
+
+        /* Smooth transition for the evasive No button */
+        #no-btn {
+            transition: left 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen w-full bg-gradient-to-br from-rose-100 via-pink-100 to-rose-200 flex items-center justify-center p-4 font-sans text-gray-800 relative overflow-hidden">
+
+    <!-- Background Floating Hearts Container -->
+    <div id="particles-container" class="fixed inset-0 pointer-events-none overflow-hidden z-0"></div>
+
+    <!-- Decorative Ambient Glow Blobs -->
+    <div class="fixed -top-24 -left-24 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-40 pointer-events-none"></div>
+    <div class="fixed -bottom-24 -right-24 w-96 h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-40 pointer-events-none"></div>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 -translate-y-24 opacity-0 transition-all duration-300 z-50 bg-gray-900/90 backdrop-blur-md text-white px-5 py-3 rounded-full shadow-xl flex items-center gap-2.5 text-sm font-medium pointer-events-none">
+        <span id="toast-icon">✨</span>
+        <span id="toast-message">Link copied to clipboard!</span>
+    </div>
+
+    <!-- Return to Creator Mode Pill (Only visible when testing/previewing) -->
+    <button id="back-to-creator-btn" onclick="switchToCreatorMode()" class="hidden fixed top-4 right-4 z-40 bg-white/80 hover:bg-white text-rose-600 border border-rose-200 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-sm backdrop-blur-md transition flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Creator Setup
+    </button>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-md z-10 relative flex items-center justify-center min-h-[420px]">
+
+        <!-- ==========================================
+             MODE 1: CREATOR SETUP SCREEN
+             ========================================== -->
+        <section id="creator-screen" class="glass-card w-full rounded-3xl p-7 sm:p-9 text-center screen-transition screen-visible">
+            <!-- Cute Envelope With Heart SVG -->
+            <div class="w-20 h-20 mx-auto mb-4 bg-rose-100 rounded-2xl flex items-center justify-center shadow-inner animate-float">
+                <svg class="w-11 h-11 text-rose-500" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+                    <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+                </svg>
+            </div>
+
+            <h1 class="font-romantic text-4xl sm:text-5xl text-rose-600 mb-2">Create Your Proposal</h1>
+            <p class="text-sm text-gray-600 mb-6 leading-relaxed">
+                Enter your special someone's name below to generate a personalized, interactive proposal link just for her.
+            </p>
+
+            <!-- Input Form -->
+            <div class="text-left mb-5">
+                <label for="partner-name-input" class="block text-xs font-semibold uppercase tracking-wider text-rose-600 mb-2 ml-1">
+                    Her Name ❤️
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="partner-name-input" 
+                        placeholder="e.g., Sophia" 
+                        maxlength="40"
+                        class="w-full px-4 py-3.5 rounded-2xl border-2 border-rose-200 bg-white/90 focus:bg-white focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15 transition text-gray-800 font-medium placeholder-gray-400"
+                        onkeydown="if(event.key === 'Enter') handleGenerateLink()"
+                    >
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-rose-400 pointer-events-none">💕</span>
+                </div>
+                <p id="input-error" class="text-xs text-rose-600 mt-1.5 ml-1 hidden font-medium">Please enter her name first!</p>
+            </div>
+
+            <button 
+                onclick="handleGenerateLink()" 
+                class="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold py-3.5 px-6 rounded-2xl glow-btn flex items-center justify-center gap-2 text-base cursor-pointer">
+                <span>Generate Proposal Link</span>
+                <span>✨</span>
+            </button>
+
+            <!-- Generated Result Box (Hidden initially) -->
+            <div id="generated-link-box" class="hidden mt-6 pt-6 border-t border-rose-200/70 text-left animate-fade-in">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 ml-1">
+                    Your Shareable Link:
+                </label>
+                <div class="flex items-center gap-2 mb-4">
+                    <input 
+                        type="text" 
+                        id="share-url-output" 
+                        readonly 
+                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-rose-50/90 border border-rose-200 rounded-xl text-gray-700 font-mono select-all focus:outline-none"
+                    >
+                    <button 
+                        onclick="copyGeneratedLink()" 
+                        class="shrink-0 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span>Copy</span>
+                    </button>
+                </div>
+
+                <!-- Preview Experience Button -->
+                <button 
+                    onclick="previewRecipientExperience()" 
+                    class="w-full bg-white hover:bg-rose-50 text-rose-600 border-2 border-rose-300 font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-sm cursor-pointer">
+                    <span>Preview Experience Now</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             MODE 2: RECIPIENT SCREEN 1 (WELCOME)
+             ========================================== -->
+        <section id="welcome-screen" class="glass-card w-full rounded-3xl p-8 sm:p-10 text-center screen-transition screen-hidden">
+            <!-- Animated Glowing Heart SVG -->
+            <div class="relative w-28 h-28 mx-auto mb-6 flex items-center justify-center">
+                <div class="absolute inset-0 bg-rose-400 rounded-full filter blur-xl opacity-30 animate-pulse"></div>
+                <svg class="w-24 h-24 text-rose-500 animate-heartbeat drop-shadow-md relative z-10" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                </svg>
+            </div>
+
+            <h1 class="font-romantic text-4xl sm:text-5xl text-rose-600 mb-4 leading-tight">
+                Hey <span class="recipient-name-span underline decoration-rose-300 decoration-wavy underline-offset-4">My Love</span> ❤️
+            </h1>
+            
+            <p class="text-base sm:text-lg text-gray-700 mb-8 font-medium leading-relaxed">
+                I have something really special to ask you...
+            </p>
+
+            <button 
+                onclick="goToQuestionScreen()" 
+                class="w-full sm:w-auto min-w-[200px] bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold py-4 px-8 rounded-full glow-btn text-base sm:text-lg inline-flex items-center justify-center gap-2 cursor-pointer">
+                <span>Continue</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </section>
+
+
+        <!-- ==========================================
+             MODE 2: RECIPIENT SCREEN 2 (THE QUESTION)
+             ========================================== -->
+        <section id="question-screen" class="glass-card w-full rounded-3xl p-7 sm:p-10 text-center screen-transition screen-hidden">
+            <!-- Cute Asking Bear / Love Illustration -->
+            <div class="w-32 h-32 mx-auto mb-4 animate-float relative">
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-md">
+                    <!-- Ears -->
+                    <circle cx="55" cy="55" r="24" fill="#d97706" />
+                    <circle cx="55" cy="55" r="13" fill="#fef3c7" />
+                    <circle cx="145" cy="55" r="24" fill="#d97706" />
+                    <circle cx="145" cy="55" r="13" fill="#fef3c7" />
+                    <!-- Head -->
+                    <circle cx="100" cy="95" r="55" fill="#f59e0b" />
+                    <!-- Blush -->
+                    <ellipse cx="68" cy="102" rx="10" ry="6" fill="#fb7185" opacity="0.6" />
+                    <ellipse cx="132" cy="102" rx="10" ry="6" fill="#fb7185" opacity="0.6" />
+                    <!-- Eyes -->
+                    <circle cx="78" cy="88" r="6.5" fill="#1f2937" />
+                    <circle cx="76" cy="85.5" r="2.2" fill="#ffffff" />
+                    <circle cx="122" cy="88" r="6.5" fill="#1f2937" />
+                    <circle cx="120" cy="85.5" r="2.2" fill="#ffffff" />
+                    <!-- Snout -->
+                    <ellipse cx="100" cy="104" rx="18" ry="14" fill="#fef3c7" />
+                    <ellipse cx="100" cy="99" rx="6" ry="4.5" fill="#78350f" />
+                    <path d="M100 103.5 L100 110 M94 110 Q100 115 106 110" stroke="#78350f" stroke-width="2.5" fill="none" stroke-linecap="round" />
+                    <!-- Body Holding Big Heart -->
+                    <path d="M55 150 C55 125 145 125 145 150 L145 185 L55 185 Z" fill="#f59e0b" />
+                    <!-- Big Heart Held by Bear -->
+                    <path d="M100 182 C100 182 62 158 62 136 C62 122 74 114 86 114 C94 114 98 119 100 123 C102 119 106 114 114 114 C126 114 138 122 138 136 C138 158 100 182 100 182 Z" fill="#f43f5e" />
+                    <!-- Paws holding heart -->
+                    <circle cx="64" cy="145" r="12" fill="#d97706" />
+                    <circle cx="136" cy="145" r="12" fill="#d97706" />
+                </svg>
+            </div>
+
+            <h2 class="font-romantic text-4xl sm:text-5xl text-rose-600 mb-2 leading-tight">
+                <span class="recipient-name-span">Sweetheart</span>, do you love me?
+            </h2>
+            
+            <p class="text-sm sm:text-base text-rose-500/90 font-medium mb-4">
+                Will you be mine forever? 💍✨
+            </p>
+
+            <!-- Dynamic Pleading Message Container -->
+            <div class="min-h-[32px] flex items-center justify-center mb-5">
+                <p id="pleading-text" class="text-sm font-semibold text-rose-600 bg-rose-100/90 px-4 py-1 rounded-full shadow-sm hidden animate-bounce"></p>
+            </div>
+
+            <!-- Yes / No Buttons Area -->
+            <div class="flex flex-wrap items-center justify-center gap-4 min-h-[70px] relative">
+                <button 
+                    id="yes-btn"
+                    onclick="handleYesClick()" 
+                    class="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold py-3.5 px-8 rounded-full glow-btn text-lg cursor-pointer z-20 transition-transform duration-200">
+                    Yes! 💕
+                </button>
+
+                <button 
+                    id="no-btn"
+                     class="bg-white hover:bg-gray-50 text-gray-700 border-2 border-rose-200 font-semibold py-3.5 px-7 rounded-full shadow-md text-base cursor-pointer z-30 select-none">
+                    No 😢
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             MODE 2: RECIPIENT SCREEN 3 (CELEBRATION)
+             ========================================== -->
+        <section id="celebration-screen" class="glass-card w-full rounded-3xl p-8 sm:p-10 text-center screen-transition screen-hidden">
+            <!-- Joyful Celebration Illustration -->
+            <div class="w-36 h-36 mx-auto mb-5 animate-float relative">
+                <div class="absolute inset-0 bg-pink-400 rounded-full filter blur-2xl opacity-30 animate-pulse"></div>
+                <svg viewBox="0 0 200 200" class="w-full h-full relative z-10 drop-shadow-md">
+                    <!-- Floating mini hearts -->
+                    <path d="M40 50 C40 42 30 38 25 45 C20 38 10 42 10 50 C10 60 25 68 25 68 C25 68 40 60 40 50 Z" fill="#fb7185" class="animate-bounce" />
+                    <path d="M190 45 C190 37 180 33 175 40 C170 33 160 37 160 45 C160 55 175 63 175 63 C175 63 190 55 190 45 Z" fill="#f43f5e" class="animate-pulse" />
+                    
+                    <!-- Happy Bear -->
+                    <circle cx="55" cy="60" r="22" fill="#d97706" />
+                    <circle cx="55" cy="60" r="12" fill="#fef3c7" />
+                    <circle cx="145" cy="60" r="22" fill="#d97706" />
+                    <circle cx="145" cy="60" r="12" fill="#fef3c7" />
+                    <circle cx="100" cy="100" r="52" fill="#f59e0b" />
+                    
+                    <!-- Happy Closed Arc Eyes -->
+                    <path d="M70 90 Q78 80 86 90" stroke="#1f2937" stroke-width="4" fill="none" stroke-linecap="round" />
+                    <path d="M114 90 Q122 80 130 90" stroke="#1f2937" stroke-width="4" fill="none" stroke-linecap="round" />
+                    
+                    <!-- Rosy Cheeks -->
+                    <ellipse cx="65" cy="102" rx="11" ry="6.5" fill="#f43f5e" opacity="0.65" />
+                    <ellipse cx="135" cy="102" rx="11" ry="6.5" fill="#f43f5e" opacity="0.65" />
+
+                    <!-- Snout & Big Smile -->
+                    <ellipse cx="100" cy="108" rx="18" ry="14" fill="#fef3c7" />
+                    <ellipse cx="100" cy="102" rx="6" ry="4" fill="#78350f" />
+                    <path d="M90 109 Q100 120 110 109 Z" fill="#e11d48" />
+
+                    <!-- Raised Celebrating Arms -->
+                    <ellipse cx="45" cy="135" rx="14" ry="24" transform="rotate(-35 45 135)" fill="#f59e0b" />
+                    <ellipse cx="155" cy="135" rx="14" ry="24" transform="rotate(35 155 135)" fill="#f59e0b" />
+
+                    <!-- Center Crown Heart -->
+                    <path d="M100 50 C100 50 82 36 82 24 C82 16 89 12 95 12 C98 12 100 15 100 17 C100 15 102 12 105 12 C111 12 118 16 118 24 C118 36 100 50 100 50 Z" fill="#e11d48" />
+                </svg>
+            </div>
+
+            <h1 class="font-romantic text-4xl sm:text-5xl text-rose-600 mb-4 leading-tight">
+                Yay! I knew it, <span class="recipient-name-span">My Love</span>! ❤️
+            </h1>
+
+            <p class="text-base sm:text-lg text-gray-700 font-medium leading-relaxed mb-6">
+                You just made me the happiest person alive! ❤️
+            </p>
+
+            <div class="inline-flex items-center gap-2 bg-rose-100/90 border border-rose-200 px-5 py-2.5 rounded-full text-rose-600 font-semibold text-sm shadow-inner">
+                <span>Forever & Always</span>
+                <span>💑✨💖</span>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // STATE & CONFIGURATION
+        // ==========================================
+        let recipientName = "";
+        let noAttemptCount = 0;
+        let yesScale = 1;
+        let isPreviewMode = false;
+
+        const pleadingMessages = [
+            "Are you sure? 🥺",
+            "Think again! 💭",
+            "Nice try! 😜",
+            "Don't break my heart! 💔",
+            "Pretty please? 🌹",
+            "You can't catch the No button! 🏃‍♂️💨",
+            "My heart says you meant Yes! ❤️",
+            "Give love a chance! 🥰",
+            "Look how big the Yes button is getting! 👉",
+            "Okay, now you HAVE to click Yes! 😘"
+        ];
+
+        // ==========================================
+        // INITIALIZATION ON LOAD
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            initFloatingHearts();
+            setupNoButtonEvasion();
+            checkUrlParameters();
+        });
+
+        /**
+         * Checks if `?name=` exists in the URL.
+         * If present, starts Recipient Mode directly; otherwise shows Creator Mode.
+         */
+        function checkUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rawName = urlParams.get('name');
+
+            if (rawName && rawName.trim() !== "") {
+                recipientName = sanitizeName(rawName.trim());
+                populateRecipientName(recipientName);
+                showScreen('welcome-screen');
+            } else {
+                showScreen('creator-screen');
+            }
+        }
+
+        /**
+         * Sanitizes name text to keep UI clean
+         */
+        function sanitizeName(str) {
+            return str.replace(/[<>]/g, '');
+        }
+
+        /**
+         * Injects the recipient's name into all `.recipient-name-span` elements
+         */
+        function populateRecipientName(name) {
+            const spans = document.querySelectorAll('.recipient-name-span');
+            spans.forEach(span => {
+                span.textContent = name;
+            });
+            document.title = `For ${name} ❤️`;
+        }
+
+        // ==========================================
+        // CREATOR MODE FUNCTIONS
+        // ==========================================
+        function handleGenerateLink() {
+            const inputEl = document.getElementById('partner-name-input');
+            const errorEl = document.getElementById('input-error');
+            const resultBox = document.getElementById('generated-link-box');
+            const outputInput = document.getElementById('share-url-output');
+
+            const enteredName = inputEl.value.trim();
+
+            if (!enteredName) {
+                errorEl.classList.remove('hidden');
+                inputEl.classList.add('border-rose-500');
+                inputEl.focus();
+                return;
+            }
+
+            errorEl.classList.add('hidden');
+            inputEl.classList.remove('border-rose-500');
+
+            recipientName = sanitizeName(enteredName);
+
+            // Build shareable URL with ?name= parameter
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareableUrl = `${baseUrl}?name=${encodeURIComponent(recipientName)}`;
+
+            outputInput.value = shareableUrl;
+            resultBox.classList.remove('hidden');
+
+            showToast("Proposal link generated! ✨");
+        }
+
+        function copyGeneratedLink() {
+            const outputInput = document.getElementById('share-url-output');
+            outputInput.select();
+            outputInput.setSelectionRange(0, 99999);
+
+            try {
+                // Using execCommand('copy') for reliable iFrame compatibility
+                document.execCommand('copy');
+                showToast("Link copied! Ready to send to her ❤️");
+            } catch (err) {
+                showToast("Select and copy the link manually.");
+            }
+        }
+
+        function previewRecipientExperience() {
+            const inputEl = document.getElementById('partner-name-input');
+            const enteredName = inputEl.value.trim() || "My Love";
+            recipientName = sanitizeName(enteredName);
+            isPreviewMode = true;
+
+            populateRecipientName(recipientName);
+            document.getElementById('back-to-creator-btn').classList.remove('hidden');
+            resetQuestionState();
+            showScreen('welcome-screen');
+        }
+
+        function switchToCreatorMode() {
+            isPreviewMode = false;
+            document.getElementById('back-to-creator-btn').classList.add('hidden');
+            resetQuestionState();
+            document.title = "Something Special For You ❤️";
+            showScreen('creator-screen');
+        }
+
+        // ==========================================
+        // RECIPIENT SCREEN NAVIGATION
+        // ==========================================
+        function showScreen(screenId) {
+            const screens = ['creator-screen', 'welcome-screen', 'question-screen', 'celebration-screen'];
+            
+            // Ensure wandering No button is hidden if leaving question screen
+            const noBtn = document.getElementById('no-btn');
+            if (screenId !== 'question-screen' && noBtn) {
+                noBtn.style.position = 'relative';
+                noBtn.style.left = 'auto';
+                noBtn.style.top = 'auto';
+            }
+
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('screen-hidden');
+                    el.classList.add('screen-visible');
+                } else {
+                    el.classList.remove('screen-visible');
+                    el.classList.add('screen-hidden');
+                }
+            });
+        }
+
+        function goToQuestionScreen() {
+            resetQuestionState();
+            showScreen('question-screen');
+        }
+
+        // ==========================================
+        // EVASIVE 'NO' BUTTON & 'YES' GROWTH LOGIC
+        // ==========================================
+        function setupNoButtonEvasion() {
+            const noBtn = document.getElementById('no-btn');
+
+            // Desktop hover evasion
+            noBtn.addEventListener('mouseenter', (e) => {
+                e.preventDefault();
+                evadeNoButton();
+            });
+
+            // Mobile touch evasion
+            noBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                evadeNoButton();
+            }, { passive: false });
+
+            // Fallback click handler just in case keyboard navigation or fast tap hits it
+            noBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                evadeNoButton();
+            });
+        }
+
+        function evadeNoButton() {
+            const noBtn = document.getElementById('no-btn');
+            const yesBtn = document.getElementById('yes-btn');
+            const pleadingText = document.getElementById('pleading-text');
+
+            noAttemptCount++;
+
+            // 1. Update pleading text
+            const msgIndex = (noAttemptCount - 1) % pleadingMessages.length;
+            pleadingText.textContent = pleadingMessages[msgIndex];
+            pleadingText.classList.remove('hidden');
+
+            // 2. Grow the 'Yes!' button smoothly
+            yesScale = Math.min(yesScale + 0.16, 2.5);
+            yesBtn.style.transform = `scale(${yesScale})`;
+
+            // 3. Calculate safe random coordinates within the viewport
+            // Move button to body level fixed positioning so it isn't clipped by card backdrop-filter
+            if (noBtn.parentElement !== document.body) {
+                document.body.appendChild(noBtn);
+            }
+
+            const btnRect = noBtn.getBoundingClientRect();
+            const btnWidth = btnRect.width || 110;
+            const btnHeight = btnRect.height || 48;
+
+            const padding = 24;
+            const maxX = Math.max(padding, window.innerWidth - btnWidth - padding);
+            const maxY = Math.max(padding, window.innerHeight - btnHeight - padding);
+
+            // Pick a spot away from the Yes button so it never overlaps it
+            const yesRect = yesBtn.getBoundingClientRect();
+            let randomX, randomY;
+            let safetyTries = 0;
+
+            do {
+                randomX = Math.floor(Math.random() * (maxX - padding)) + padding;
+                randomY = Math.floor(Math.random() * (maxY - padding)) + padding;
+                safetyTries++;
+            } while (
+                safetyTries < 15 &&
+                randomX + btnWidth > yesRect.left - 30 &&
+                randomX < yesRect.right + 30 &&
+                randomY + btnHeight > yesRect.top - 30 &&
+                randomY < yesRect.bottom + 30
+            );
+
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = `${randomX}px`;
+            noBtn.style.top = `${randomY}px`;
+            noBtn.style.zIndex = '50';
+        }
+
+        function resetQuestionState() {
+            noAttemptCount = 0;
+            yesScale = 1;
+
+            const yesBtn = document.getElementById('yes-btn');
+            const noBtn = document.getElementById('no-btn');
+            const pleadingText = document.getElementById('pleading-text');
+            const buttonsContainer = yesBtn.parentElement;
+
+            if (yesBtn) yesBtn.style.transform = 'scale(1)';
+            if (pleadingText) {
+                pleadingText.classList.add('hidden');
+                pleadingText.textContent = '';
+            }
+
+            if (noBtn && buttonsContainer) {
+                if (noBtn.parentElement !== buttonsContainer) {
+                    buttonsContainer.appendChild(noBtn);
+                }
+                noBtn.style.position = 'relative';
+                noBtn.style.left = 'auto';
+                noBtn.style.top = 'auto';
+            }
+        }
+
+        // ==========================================
+        // CELEBRATION SCREEN & CONFETTI
+        // ==========================================
+        function handleYesClick() {
+            const noBtn = document.getElementById('no-btn');
+            if (noBtn) {
+                noBtn.style.display = 'none';
+            }
+
+            showScreen('celebration-screen');
+            triggerRomanticConfetti();
+        }
+
+        function triggerRomanticConfetti() {
+            if (typeof confetti !== 'function') return;
+
+            const duration = 5.5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const romanticColors = ['#f43f5e', '#fb7185', '#fda4af', '#e11d48', '#ffb3c6', '#ffffff'];
+
+            // Initial big burst from center
+            confetti({
+                particleCount: 95,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: romanticColors
+            });
+
+            // Continuous side cannons
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                confetti({
+                    particleCount: 4,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0, y: 0.65 },
+                    colors: romanticColors
+                });
+                confetti({
+                    particleCount: 4,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1, y: 0.65 },
+                    colors: romanticColors
+                });
+            }, 220);
+        }
+
+        // ==========================================
+        // BACKGROUND FLOATING HEARTS GENERATOR
+        // ==========================================
+        function initFloatingHearts() {
+            const container = document.getElementById('particles-container');
+            const heartSymbols = ['❤️', '💖', '💕', '🌸', '✨', '💗'];
+            const particleCount = 18;
+
+            for (let i = 0; i < particleCount; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart-particle';
+                heart.textContent = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+                
+                const size = Math.floor(Math.random() * 18) + 14; // 14px to 32px
+                const left = Math.floor(Math.random() * 96) + 2; // 2% to 98%
+                const duration = (Math.random() * 8 + 7).toFixed(1); // 7s to 15s
+                const delay = (Math.random() * 10).toFixed(1);
+
+                heart.style.fontSize = `${size}px`;
+                heart.style.left = `${left}vw`;
+                heart.style.animationDuration = `${duration}s`;
+                heart.style.animationDelay = `${delay}s`;
+
+                container.appendChild(heart);
+            }
+        }
+
+        // ==========================================
+        // TOAST HELPER
+        // ==========================================
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            msgEl.textContent = message;
+
+            toast.classList.remove('-translate-y-24', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
